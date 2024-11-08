@@ -4,7 +4,7 @@ class Program
 {
     static void Main()
     {
-        CreditCard card = new CreditCard("6989 3979 4969 5959", "Raphinha", new DateTime(2026, 12, 31), 9999, 900, 10000);
+        CreditCard card = new CreditCard("0889 3569 4928 0011", "Raphinha", new DateTime(2026, 12, 31), 9999, 900, 10000);
 
         card.OnDeposit += LogToConsole;
         card.OnWithdraw += LogToConsole;
