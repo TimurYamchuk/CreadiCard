@@ -1,23 +1,23 @@
-﻿using System;
+using System;
 
 public delegate void AccountEventHandler(string message);
 
 public class CreditCard
 {
-    public string CardNumber { get; set; }
-    public string OwnerName { get; set; }
-    public DateTime ExpirationDate { get; set; }
+    public string CardNumber { get; }
+    public string OwnerName { get; }
+    public DateTime ExpirationDate { get; }
     private int Pin { get; set; }
-    public decimal CreditLimit { get; set; }
-    public decimal Balance { get; set; }
+    public decimal CreditLimit { get; }
+    public decimal Balance { get; private set; }
 
     public event AccountEventHandler OnDeposit;
     public event AccountEventHandler OnWithdraw;
-    public event AccountEventHandler OnCreditUsageStart;
-    public event AccountEventHandler OnTargetBalanceReached;
-    public event AccountEventHandler OnPinChanged;
+    public event AccountEventHandler OnCreditUsage;
+    public event AccountEventHandler OnBalanceGoalReached;
+    public event AccountEventHandler OnPinUpdated;
 
-    public CreditCard(string cardNumber, string ownerName, DateTime expirationDate, int pin, decimal creditLimit, decimal initialBalance)
+    public CreditCard(string cardNumber, string ownerName, DateTime expirationDate, int pin, decimal creditLimit, decimal initialBalance = 0)
     {
         CardNumber = cardNumber;
         OwnerName = ownerName;
@@ -27,14 +27,9 @@ public class CreditCard
         Balance = initialBalance;
     }
 
-    public void ShowCardInfo()
+    public void DisplayCardInfo()
     {
-        Console.WriteLine("\n--- Информация о карте ---");
-        Console.WriteLine($"Номер карты: {CardNumber}");
-        Console.WriteLine($"Владелец: {OwnerName}");
-        Console.WriteLine($"Дата истечения: {ExpirationDate.ToShortDateString()}");
-        Console.WriteLine($"Текущий баланс: ${Balance}");
-        Console.WriteLine($"Кредитный лимит: ${CreditLimit}");
+        Console.WriteLine($"\n--- Данные карты ---\nНомер: {CardNumber}\nВладелец: {OwnerName}\nСрок действия: {ExpirationDate.ToShortDateString()}\nБаланс: ${Balance}\nЛимит: ${CreditLimit}");
     }
 
     public void Deposit(decimal amount)
@@ -42,11 +37,11 @@ public class CreditCard
         if (amount > 0)
         {
             Balance += amount;
-            OnDeposit?.Invoke($"Пополнено на ${amount}. Новый баланс: ${Balance}");
+            OnDeposit?.Invoke($"Баланс увеличен на ${amount}. Текущий баланс: ${Balance}");
         }
         else
         {
-            Console.WriteLine("Сумма пополнения должна быть положительной.");
+            Console.WriteLine("Введите сумму больше нуля.");
         }
     }
 
@@ -56,42 +51,34 @@ public class CreditCard
         {
             Balance -= amount;
             if (Balance < 0)
-            {
-                OnCreditUsageStart?.Invoke($"Вы начали использовать кредит. Снято: ${amount}. Баланс: ${Balance}");
-            }
+                OnCreditUsage?.Invoke($"Используется кредит. Снято: ${amount}. Баланс: ${Balance}");
             else
-            {
-                OnWithdraw?.Invoke($"Снято: ${amount}. Новый баланс: ${Balance}");
-            }
+                OnWithdraw?.Invoke($"Снято: ${amount}. Баланс: ${Balance}");
         }
         else
         {
-            Console.WriteLine("Недостаточно средств.");
+            Console.WriteLine("Недостаточно средств или некорректная сумма.");
         }
     }
 
-    public void CheckTargetBalance(decimal targetBalance)
+    public void CheckBalanceGoal(decimal targetBalance)
     {
-        if (Balance >= targetBalance)
-        {
-            OnTargetBalanceReached?.Invoke($"Целевой баланс ${targetBalance} достигнут.");
-        }
+        if (targetBalance > 0 && Balance >= targetBalance)
+            OnBalanceGoalReached?.Invoke($"Целевой баланс ${targetBalance} достигнут.");
         else
-        {
-            Console.WriteLine($"Необходимо ещё ${targetBalance - Balance} для достижения целевого баланса.");
-        }
+            Console.WriteLine($"Не хватает ${targetBalance - Balance} до целевого баланса.");
     }
 
-    public void ChangePin(int newPin)
+    public void UpdatePin(int newPin)
     {
         if (newPin != Pin)
         {
             Pin = newPin;
-            OnPinChanged?.Invoke("ПИН успешно изменён.");
+            OnPinUpdated?.Invoke("ПИН обновлен.");
         }
         else
         {
-            Console.WriteLine("Новый ПИН не может совпадать с текущим.");
+            Console.WriteLine("Новый ПИН не должен совпадать с текущим.");
         }
     }
 }
