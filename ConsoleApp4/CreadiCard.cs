@@ -1,38 +1,47 @@
-﻿using System;
+using System;
 
 class Program
 {
     static void Main()
     {
-        CreditCard card = new CreditCard("0889 3569 4928 0011", "Raphinha", new DateTime(2026, 12, 31), 9999, 900, 10000);
+        Console.Write("Введите номер карты: ");
+        string cardNumber = Console.ReadLine();
 
-        card.OnDeposit += LogToConsole;
-        card.OnWithdraw += LogToConsole;
-        card.OnCreditUsageStart += LogToConsole;
-        card.OnTargetBalanceReached += LogToConsole;
-        card.OnPinChanged += LogToConsole;
+        Console.Write("Введите имя владельца: ");
+        string ownerName = Console.ReadLine();
 
-        card.ShowCardInfo();
+        DateTime expirationDate;
+        Console.Write("Введите дату истечения (ГГГГ-ММ-ДД): ");
+        while (!DateTime.TryParse(Console.ReadLine(), out expirationDate) || expirationDate <= DateTime.Now)
+            Console.Write("Неверная дата. Введите будущую дату (ГГГГ-ММ-ДД): ");
 
-        Console.WriteLine("\nПопытка внести $200 на счет...");
+        Console.Write("Установите ПИН-код (4 цифры): ");
+        int pin;
+        while (!int.TryParse(Console.ReadLine(), out pin) || pin < 1000 || pin > 9999)
+            Console.Write("ПИН-код должен быть 4-значным числом: ");
+
+        Console.Write("Введите кредитный лимит: ");
+        decimal creditLimit;
+        while (!decimal.TryParse(Console.ReadLine(), out creditLimit) || creditLimit < 0)
+            Console.Write("Лимит должен быть положительным числом: ");
+
+        CreditCard card = new CreditCard(cardNumber, ownerName, expirationDate, pin, creditLimit, 0);
+        card.OnDeposit += DisplayMessage;
+        card.OnWithdraw += DisplayMessage;
+        card.OnCreditUsage += DisplayMessage;
+        card.OnBalanceGoalReached += DisplayMessage;
+        card.OnPinUpdated += DisplayMessage;
+
+        card.DisplayCardInfo();
         card.Deposit(200);
-
-        Console.WriteLine("\nПопытка снять $50...");
         card.Withdraw(50);
-
-        Console.WriteLine("\nПопытка снять $300...");
         card.Withdraw(300);
-
-        Console.WriteLine("\nПроверка, достигнут ли целевой баланс $500...");
-        card.CheckTargetBalance(500);
-
-        Console.WriteLine("\nСмена PIN-кода на 5678...");
-        card.ChangePin(5678);
-
-        card.ShowCardInfo();
+        card.CheckBalanceGoal(500);
+        card.UpdatePin(5678);
+        card.DisplayCardInfo();
     }
 
-    static void LogToConsole(string message)
+    static void DisplayMessage(string message)
     {
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine(message);
